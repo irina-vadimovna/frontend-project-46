@@ -1,15 +1,17 @@
 import yaml from 'js-yaml';
+import path from 'path';
 
 const getParsed = (file, data) => {
-  if (String(file).endsWith('.json')) {
-    return JSON.parse(data);
+  const format = path.extname(file);
+  switch (format) {
+    case '.json':
+      return JSON.parse(data);
+    case '.yaml':
+      return yaml.load(data);
+    case '.yml':
+      return yaml.load(data);
+    default:
+      return '';
   }
-  if (String(file).endWith('.yaml')) {
-    return yaml.load(data);
-  }
-  if (String(file).endsWith('.yml')) {
-    return yaml.load(data);
-  }
-  return 'Неизвестный формат';
 };
 export default getParsed;
