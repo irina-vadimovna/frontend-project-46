@@ -1,27 +1,31 @@
 import _ from 'lodash';
 
-const getDifference = (file1, file2) => {
-  let result = '';
-  const sortedKeys = _.sortBy(_.union(Object.keys(file1), Object.keys(file2)));
-  sortedKeys.map((key) => {
-    if (Object.hasOwn(file1, key) && Object.hasOwn(file2, key)) {
-      if (file1[key] === file2[key]) {
-        result += `    ${key}: ${file1[key]}\n`;
-      } else {
-        result += `  - ${key}: ${file1[key]}\n`;
-        result += `  + ${key}: ${file2[key]}\n`;
-      }
+const getDifference = (obj1, obj2) => {
+  const key1 = Object.keys(obj1);
+  const key2 = Object.keys(obj2);
+  const sortedUnicKeys = _.sortBy(_.union(key1, key2));
+  const resultObj = sortedUnicKeys.map((key) => {
+    const value1 = obj1[key];
+    const value2 = obj2[key];
+    if (!Object.hasOwn(obj1, key)) {
+      return { key, value: value2, type: 'added' };
+    }
+    if (!Object.hasOwn(obj2, key)) {
+      return { key, value: value1, type: 'deleted' };
+    }
+    if (value1 === value2) {
+      return { key, value: value1, type: 'unchanged' };
+    }
+    if (typeof value1 === 'object' && typeof value2 === 'object') {
+      return { key, value: getDifference(value1, value2), type: 'hasChild' };
     }
 
-    if (Object.hasOwn(file1, key) && !Object.hasOwn(file2, key)) {
-      result += `  - ${key}: ${file1[key]}\n`;
-    }
-
-    if (Object.hasOwn(file2, key) && !Object.hasOwn(file1, key)) {
-      result += `  + ${key}: ${file2[key]}\n`;
-    }
-    return result;
+    return {
+      key, oldValue: value1, value: value2, type: 'changed',
+    };
   });
-  return `{\n  ${result.trim()}\n}`;
+
+  return resultObj;
 };
+
 export default getDifference;

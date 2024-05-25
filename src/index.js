@@ -1,22 +1,24 @@
-import process from 'process';
-import path from 'path';
-import fs from 'fs';
-import getParsed from './parsers.js';
+import { cwd } from 'process';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
+import parseFile from './parsers.js';
+import formatter from './formatters/index.js';
 import getDifference from './getDifference.js';
 
-const getAbsolutePath = (filePath) => path.resolve(process.cwd(), filePath);
+const readfile = (filepath) => {
+  const currentDir = cwd();
+  const absolutePath = resolve(currentDir, filepath);
+  const content = readFileSync(absolutePath, 'utf-8');
+  return content;
+};
 
-const readFile = (filePath) => fs.readFileSync(getAbsolutePath(filePath), 'utf-8');
+const getExtension = (file) => file.split('.')[1];
 
-const gendiff = (filePath1, filePath2) => {
-  const dataFile1 = readFile(filePath1);
-  const dataFile2 = readFile(filePath2);
-
-  const parsingFile1 = getParsed(filePath1, dataFile1);
-  const parsingFile2 = getParsed(filePath2, dataFile2);
-
-  const difference = getDifference(parsingFile1, parsingFile2);
-  return difference;
+const gendiff = (filepath1, filepath2, format = 'stylish') => {
+  const file1 = parseFile(getExtension(filepath1), readfile(filepath1));
+  const file2 = parseFile(getExtension(filepath2), readfile(filepath2));
+  const diffTree = getDifference(file1, file2);
+  return formatter(diffTree, format);
 };
 
 export default gendiff;
